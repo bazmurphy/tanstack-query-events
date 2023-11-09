@@ -1,55 +1,39 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from "@tanstack/react-query"; // import TanStack Query
 
-import LoadingIndicator from '../UI/LoadingIndicator.jsx';
-import ErrorBlock from '../UI/ErrorBlock.jsx';
-import EventItem from './EventItem.jsx';
+import LoadingIndicator from "../UI/LoadingIndicator.jsx";
+import ErrorBlock from "../UI/ErrorBlock.jsx";
+import EventItem from "./EventItem.jsx";
+
+import { fetchEvents } from "../../util/http.js"; // import fetchEvents
 
 export default function NewEventsSection() {
-  const [data, setData] = useState();
-  const [error, setError] = useState();
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    async function fetchEvents() {
-      setIsLoading(true);
-      const response = await fetch('http://localhost:3000/events');
-
-      if (!response.ok) {
-        const error = new Error('An error occurred while fetching the events');
-        error.code = response.status;
-        error.info = await response.json();
-        throw error;
-      }
-
-      const { events } = await response.json();
-
-      return events;
-    }
-
-    fetchEvents()
-      .then((events) => {
-        setData(events);
-      })
-      .catch((error) => {
-        setError(error);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, []);
+  // useQuery Hook and destructuring the relevant properties
+  const { data, isPending, isError, error } = useQuery({
+    // provide a Query Function
+    queryFn: fetchEvents,
+    // define a Query Key
+    queryKey: ["events"],
+  });
 
   let content;
 
-  if (isLoading) {
+  // isPending from useQuery
+  if (isPending) {
     content = <LoadingIndicator />;
   }
 
-  if (error) {
+  // isError from useQuery
+  if (isError) {
     content = (
-      <ErrorBlock title="An error occurred" message="Failed to fetch events" />
+      <ErrorBlock
+        title="An error occurred"
+        // use the error message from the fetchEvents
+        message={error.info?.message || "Failed to fetch events."}
+      />
     );
   }
 
+  // data from useQuery
   if (data) {
     content = (
       <ul className="events-list">
