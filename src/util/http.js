@@ -1,5 +1,5 @@
 export async function fetchEvents() {
-  const response = await fetch("http://localhost:3000/events");
+  const response = await fetch("http://localhost:4000/events");
 
   if (!response.ok) {
     const error = new Error("An error occurred while fetching the events");

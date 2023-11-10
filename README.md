@@ -45,7 +45,7 @@ export default function NewEventsSection() {
   useEffect(() => {
     async function fetchEvents() {
       setIsLoading(true);
-      const response = await fetch("http://localhost:3000/events");
+      const response = await fetch("http://localhost:4000/events");
 
       if (!response.ok) {
         const error = new Error("An error occurred while fetching the events");
@@ -125,7 +125,7 @@ We remove the `setIsLoading(true);` from the `fetch`
 // src/util/http.js
 
 export async function fetchEvents() {
-  const response = await fetch("http://localhost:3000/events");
+  const response = await fetch("http://localhost:4000/events");
 
   if (!response.ok) {
     const error = new Error("An error occurred while fetching the events");
