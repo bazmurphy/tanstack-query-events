@@ -16,7 +16,7 @@ export default function NewEvent() {
     onSuccess: () => {
       // we use the imported queryClient and then call invalidateQueries
       // to invalidate the data and therefore it is re-fetched
-      queryClient.invalidateQueries({["events"]});
+      queryClient.invalidateQueries({ queryKey: ["events"] });
       // we can navigate after successful mutation
       navigate("/events");
     },
