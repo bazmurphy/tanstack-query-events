@@ -575,7 +575,112 @@ export default function FindEventSection() {
 }
 ```
 
+With that, if you go back and reload, we see that in the "Find Your Next Event" section, we got some events, but we also see that they now disappeared in the "Recently Added Events." And the reason for that can be seen in the network tab. There is a request we are sending to the backend API, and then the search query parameter is set to `[object Object]`, which is an invalid value.
+
+So, this section, which also uses `useQuery`, the `NewEventsSection`, ultimately calls `fetchEvents`. Here for some reason since we don't pass a `searchTerm`, this code in the `http.js` file produces an invalid URL by setting `searchTerm` to this strange `[object Object]` thing that does not lead to any results.
+
+We'll investigate where this problem is coming from and how we can solve it next.
+
 ## The Query Configuration Object & Aborting Requests
+
+So why is `searchTerm` set to some strange `[object Object]` value, as we can see in this one request here, when the new events section component tries to fetch events with this `useQuery` usage?
+
+Well because `TanStack Query` and the `useQuery` hook actually pass some default data to the `Query Function` you're defining here, and we can see that `data` if we simply console log `searchTerm`.
+
+If we do that, we should see two logs in the console because we got two components, the Find Events section and the New Events section components that do use the `fetchEvents` function with `TanStack Query`.
+
+So if we go back and reload here, we see two results here, but they're pretty strange. The second result is empty, an empty string essentially. But the first result is an `object`. An `object` which we never passed to `fetchEvents`.
+
+![](readme-images/07-01.png)
+
+Instead `TanStack Query` **by default passes some data to your** `Query Function`.
+
+So to `fetchEvents` in this case here, when assigned to `QueryFn` directly `queryFn: fetchEvents` and the data it passes in is **`an object that gives us information about the queryKey that was used for that Query and a signal`**.
+
+And that `signal` is required for `aborting that request`. If you, for example, navigate away from this page before the request was finished.
+Because `TanStack Query` thankfully can do that for you, it can` abort request`s and it does that with help of that `signal`.
+
+So for that reason to give you that `signal` and to also give you that `queryKey`, which you might want to use in your data fetching function.
+For that reason `TanStack Query` **passes an object to that function that you defined as a** `Query Function`.
+
+Therefore we should `accept such an object` and we can use object destructuring here to pull out the different things we will get here.
+For example, the `signal`, because if we do so we can actually make sure that the request that is being sent is aborted if `TanStack Query` thinks that it should be aborted because we for example, left the page.
+
+For that we can use this `signal` and pass it to the built-in fetch function by adding a second argument to fetch, a configuration object, which takes a `signal` property and wants a signal of that shape as `TanStack Query` gives it to us so that the browser then can use that abort signal internally to stop this request if it receives that `signal`.
+
+Now we want to make sure that we forward the `searchTerm`.
+
+So therefore here in this `object` which we receive in `fetchEvents`, we could pull out a `second property` with any name of our choice, for example, `searchTerm`. And now we just have to make sure that in find events section where I'm wrapping fetch events with an anonymous function like this, I'm passing an object to `fetchEvents` and I'm setting a `property` named `searchTerm` in that object.
+
+This makes sure that this `searchTerm` property exists when it's needed.
+Now to also forward that `signal` here, we can simply accept this object in this anonymous function because that's now the function that will actually be called by `TanStack Query` and therefore we'll get the `signal`.
+
+We can then simply set it as a key-value pair in this object here as well. And therefore now we have the highest degree of flexibility we can have.
+
+```js
+// src/util/http.js
+
+// we make the parameter an object, and as a second property we use searchTerm
+export async function fetchEvents({ signal, searchTerm }) {
+  // log to see the object passed by TanStack Query to the queryFn
+  console.log("searchTerm:", searchTerm);
+
+  let url = "http://localhost:4000/events";
+
+  if (searchTerm) {
+    url += "?search=" + searchTerm;
+  }
+
+  // we can pass the signal coming from the TanStack QueryFn Object to the fetch so the browser can cancel it
+  const response = await fetch(url, { signal: signal });
+
+  if (!response.ok) {
+    const error = new Error("An error occurred while fetching the events");
+    error.code = response.status;
+    error.info = await response.json();
+    throw error;
+  }
+
+  const { events } = await response.json();
+
+  return events;
+}
+```
+
+```jsx
+// src/components/Events/FindEventSection.jsx
+
+export default function FindEventSection() {
+  ...
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ["events", { search: searchTerm }],
+    // we get the signal in the anonymous function and then set it in the object we pass to the fetchEvents function
+    queryFn: ({ signal }) => fetchEvents({ signal, searchTerm }),
+  });
+  ...
+}
+```
+
+We can wrap `fetchEvents` with an anonymous function to pass any data we want via that `object` to `fetchEvents` and still get that data that's provided to us by TanStack Query.
+
+Or we set this function directly as a value for Query event if we're happy with the default object we're getting by `TanStack Query`, which is the case here in New Events section where we don't need to pass any custom data to our data fetching function.
+
+And therefore with that, if we set this and reload, the data is back here in recently added events and this find your next event area also still works as before.
+
+```jsx
+// src/components/Events/NewEventsSection.jsx
+
+export default function NewEventsSection() {
+  ...
+  const { data, isPending, isError, error } = useQuery({
+    queryFn: fetchEvents,
+    queryKey: ["events"],
+  });
+  ...
+}
+```
+
+But we're now also going to take a closer look at how exactly it works and how we might want to change that behaviour.
 
 ## Enabled & Disabled Queries
 

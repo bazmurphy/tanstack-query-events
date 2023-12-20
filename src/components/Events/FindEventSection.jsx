@@ -16,7 +16,8 @@ export default function FindEventSection() {
     // we create a dynamic Query Key
     queryKey: ["events", { search: searchTerm }],
     // we use an anonymous arrow function to call fetchEvents and pass it the searchTerm
-    queryFn: () => fetchEvents(searchTerm),
+    // that anonymous arrow function recieves an object from TanStack Query and we can pass on some of its properties to the fetchEvents
+    queryFn: ({ signal }) => fetchEvents({ signal, searchTerm }),
   });
 
   function handleSubmit(event) {
