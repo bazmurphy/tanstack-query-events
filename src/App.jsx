@@ -4,8 +4,10 @@ import {
   createBrowserRouter,
 } from "react-router-dom";
 
-// import the QueryClientProvider and QueryClient
-import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+// import the QueryClientProvider
+import { QueryClientProvider } from "@tanstack/react-query";
+// import the re-usable queryClient
+import { queryClient } from "./util/http.js";
 
 import Events from "./components/Events/Events.jsx";
 import EventDetails from "./components/Events/EventDetails.jsx";
@@ -40,8 +42,7 @@ const router = createBrowserRouter([
   },
 ]);
 
-// instantiate a new Query Client
-const queryClient = new QueryClient();
+// we remove the queryClient from here and put it another file to be re-usable
 
 function App() {
   return (

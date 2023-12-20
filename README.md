@@ -488,7 +488,7 @@ Therefore we should also include some other piece of information in that `queryK
 
 And of course here we could again use this `ref` value. But using this `ref` value for `fetchEvents` and for this key is actually not ideal, because `ref`s, unlike `state` in React don't cause this component function to re-execute which means that as the value entered into the input here changes, this query is not updated and not sent again. But of course, we would wanna send it again to get new data if the user did enter a different search term.
 
-Therefore, here in this component we will also manage some state with the `useState` hook and that state will be my `searchTerm`. So here we'll have a `searchTerm` state and a `setSearchTerm` state updating function. And our goal in `handleSubmit` is now to call `setSearchTerm` and to pass the `searchElement.current.value` a value to this state updating function so that my `searchTerm` is the value entered in this input field, but only after the form was submitted.
+Therefore, here in this component we will also manage some state with the `useState` hook and that state will be our `searchTerm`. So here we'll have a `searchTerm` state and a `setSearchTerm` state updating function. And our goal in `handleSubmit` is now to call `setSearchTerm` and to pass the `searchElement.current.value` a value to this state updating function so that our `searchTerm` is the value entered in this input field, but only after the form was submitted.
 
 And now we can use this `searchTerm` state here and here to make sure that both `fetchEvents` as well as this `queryKey` are updated dynamically and lead to different queries being sent as this `searchTerm` changes.
 
@@ -703,7 +703,7 @@ But now we want to set it to `false` if we did not enter a search term. Now to a
 
 But if we now enter, we would see results. But if we go back to no search term, we would see that loading indicator again. But maybe if we did enter something and we then go back to no search term, we want to see all events; we just don't want to see all those events initially. So there should be a difference between this input being empty initially or being empty because the user cleared it.
 
-At least that's the behaviour we'd like to have in this app. If the user did enter something else and then clears this input, we want to show all events because the user probably looked for all events, but initially, we want to show no event. And to achieve this, we'll simply make sure that my search term state initially is undefined by not passing any value at all to use state. And therefore, then here we can check that this should only be enabled if the search term is not equal to undefined. If it is undefined, which is the initial value, this Query will be `disabled`. But if the search term is anything else, including an empty string, which would be the case if the user did clear the input field manually, it will be `enabled`, and the request will be sent.
+At least that's the behaviour we'd like to have in this app. If the user did enter something else and then clears this input, we want to show all events because the user probably looked for all events, but initially, we want to show no event. And to achieve this, we'll simply make sure that our search term state initially is undefined by not passing any value at all to use state. And therefore, then here we can check that this should only be enabled if the search term is not equal to undefined. If it is undefined, which is the initial value, this Query will be `disabled`. But if the search term is anything else, including an empty string, which would be the case if the user did clear the input field manually, it will be `enabled`, and the request will be sent.
 
 And with that, we can now make sure that initially we don't have any results, but if we search something, we get that result. And if we then clear that and search, we get all events, which is exactly the behaviour we want. Now we just also want to get rid of that loading spinner, which we see initially, and we're seeing that loading spinner because when a Query is disabled, which initially here in this component will be the case, `TanStack Query` treats it as pending because we don't have any data. And instead, we're waiting for data to arrive, which can only happen once the Query is `enabled`.
 
@@ -807,7 +807,7 @@ Because just as before with `useQuery`, `useMutation` will return an object and 
 
 Instead, this object also has a `mutate` **property which is extremely important because this is now a function which you can call anywhere in this component to actually send this request** because as mentioned, `useMutation`, unlike `useQuery` **does not automatically send this request when this component here is rendered but instead only when you tell it to send that request** which you do with help of that `mutate` function.
 
-And it's of course here in handleSubmit where we want to send that request. Here we can call `mutate` and then in this case, pass the form data to `mutate`. Now we actually have to change the form data a little bit to have the right format for the backend, so we'll wrap it in an `object` where we have an `event` `property` which holds my form data as a `value`. And of course, the exact shape of data you want to send here depends on the shape of data you are getting in your application and the shape of data your backend wants.
+And it's of course here in handleSubmit where we want to send that request. Here we can call `mutate` and then in this case, pass the form data to `mutate`. Now we actually have to change the form data a little bit to have the right format for the backend, so we'll wrap it in an `object` where we have an `event` `property` which holds our form data as a `value`. And of course, the exact shape of data you want to send here depends on the shape of data you are getting in your application and the shape of data your backend wants.
 
 We will make sure that we are sending the data exactly as required by the backend. This will send this request whenever this form is submitted and it will do so with help of `TanStack Query`. So if we now save this and go back and enter some test information and we click create, nothing happens, well it makes sense that nothing happens because we haven't written any code that would do anything after sending that request.
 
@@ -1018,6 +1018,99 @@ export default function EventForm({ inputData, onSubmit, children }) {
 ```
 
 ## Acting on Mutation Success & Invalidating Queries
+
+So at the moment, whenever we create a new event, nothing happens because we don't have any code that would define what should happen after we mutate.
+
+Now we could navigate away programmatically, for example, with the help of the `useNavigate` hook provided by `React Router`. Here in Handle Submit, we could call `navigate` and go back to `/events`, for example, to go back to the starting page essentially. We could do that here, but we also might want to wait for this mutation to be finished until we do that so that we don't close this screen whilst the request is still on its way.
+
+And we could achieve that by adding another property to this `useMutation` `configuration object`, the `onSuccess` property **which wants a function as a value** that will be executed once this mutation succeeded. This also makes sure that this code will only execute if the mutation did succeed. If we instead would `navigate` away here in `handleSubmit`, we would always do that no matter if the mutation succeeds or fails. If it fails and an error message should be displayed, we would never see that because we instantly navigate away. If we instead do that in on success, we'll stay on this screen until the mutation did really succeed. So any errors would be shown to us. And therefore it's now in here where we want to call `navigate` and go to `/events`.
+
+But that's actually not all we want to do. Instead, if we would go back and submit a new event by clicking Create, we see that it is submitted but it's not showing up here under our recently added events which right now are basically all events. It's not showing up here until we for example, switch to a different page and come back because as you learned, this triggers React Query to refetch data behind the scenes.
+
+But of course, if we know that the data just changed because we added a new event, for example, we want `TanStack Query` to immediately refetch data. We want to immediately update our data. In the `NewEvents` section for this Query which is responsible for fetching those events we want to make sure that the data that was fetched here is marked as `stale` and a `refetch` is triggered.
+
+We can achieve this by calling a method that's provided by `TanStack Query` that allows us to `invalidate` **one or more queries**. So that allows us to tell `TanStack Query` that the data that's connected to some queries **is outdated and that t should be refetched**.
+
+To achieve this we should first of all go to the `src/App.jsx` file where we create this `Query Client` because it's with help of that `Query Client`. So with help of this `object` that we'll be able to force this `invalidation` of a Query. Therefore we should cut this from this file and remove this import and instead add it to some other file from which we can then import it into multiple files. In this case we can add it to the `src/util/http.js `file. There at the very top we can export this Query client and of course for that we have to import this Query client class that's being instantiated here.
+
+Now with that exported in `src/util/http.js` we can go back to `src/App.jsx` and import the Query Client from the `src/util/http.js` file. Because we still need that Query client object here to pass it to the Query client provider. But now we can use that same Query client in the `NewEvent.jsx` file in onSuccess because there, before navigating away, we now want to use this Query client.
+
+So we should import Query client then in `onSuccess`, so at a point of time where we know that it worked, we want to call Query client `invalidateQueries` which does what its name implies. It tells `TanStack Query` that the data fetched by certain queries is outdated now, that it should be marked as `stale` and that an `immediate refetch` should be triggered **if the Query belongs to a component that's currently visible on the screen.**
+
+So for example, if we are creating a new event, the page that shows all events is still visible on the screen. It's below this modal after all. So the Query that was responsible for this section here should be re-executed. And for that to target specific queries, `invalidateQueries` **takes an object as an input where we have to define the Query Key which we want to target**. And this should of course be a `Query Key` in the same format as we're using it for all those queries. So an array which then, for example, could include the word `["events"]`.
+
+**And this will then invalidate all queries that include this key**. **It does not have to be exactly the same key**. So for example, in `FindEvents` section we have a `Query Key` that includes and then also an object `["events", { search: searchTerm}]`. **So this Query with this key will also be invalidated because it includes `"events"` and we're invalidating any Query Key that does include "events" with the `queryClient.invalidateQueries({["events"]})`.**
+
+We could work around that by also setting the `exact` property on this object that we're passing to `invalidateQueries` to `true` and **now only queries with exactly that key would be invalidated**. But since you should build your Query Keys such that they describe the data you are fetching, it makes sense to invalidate all queries that include `"events"` because all those queries would otherwise be dealing with old data.
+
+For example, here in `FindEvents` section where we're looking for events based on a search term entered by the user, we of course don't want to ignore new events that have been added. So we want to `invalidate` this Query as well, so that if a new event was added, that is met by this search term entered by the user, it's presented as a result for this search term, automatically by `TanStack Query`. **And that's why by default all queries that include this key will be invalidated and why this is also typically the behaviour you want.**
+
+And therefore with the `invalidateQueries` call added, if we save that, and we now create a new event and we click Create, we see it shows up down here basically instantly because it's `refetched` behind the scenes immediately because we are `invalidatingQueries`. And that's why **this is often an important step when performing mutations because this guarantees that all queries that use a certain key operate on recent data again.**
+
+```js
+// src/util/http.js
+
+import { QueryClient } from "@tanstack/react-query";
+
+// instantiate a new Query Client
+// and allow to be exportable to other files
+export const queryClient = new QueryClient();
+...
+```
+
+```jsx
+// src/App.jsx
+
+...
+// import the QueryClientProvider
+import { QueryClientProvider } from "@tanstack/react-query";
+// import the re-usable queryClient
+import { queryClient } from "./util/http.js";
+...
+
+// we remove the queryClient from here and put it another file to be re-usable
+
+function App() {
+  return (
+    // the QueryClientProvider wraps the Router, and set the client prop to the Query Client we created above
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  );
+}
+
+export default App;
+```
+
+```jsx
+...
+export default function NewEvent() {
+  const navigate = useNavigate();
+
+  const { mutate, isPending, isError, error } = useMutation({
+    mutationFn: createNewEvent,
+    // we add a new property onSuccess which runs a function once the mutation has succeeded
+    onSuccess: () => {
+      // we use the imported queryClient and then call invalidateQueries
+      // to invalidate the data and therefore it is re-fetched
+      queryClient.invalidateQueries({["events"]});
+      // we can navigate after successful mutation
+      navigate("/events");
+    },
+  });
+
+  function handleSubmit(formData) {
+    mutate({ event: formData });
+    // we don't want to navigate away here because it will happen regardless of success or failure
+    // navigate("/events");
+  }
+
+  return (
+    ...
+  )
+}
+
+```
 
 ## A Challenge! The Problem
 

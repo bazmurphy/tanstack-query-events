@@ -1,3 +1,9 @@
+import { QueryClient } from "@tanstack/react-query";
+
+// instantiate a new Query Client
+// and allow to be exportable to other files
+export const queryClient = new QueryClient();
+
 // we make the parameter an object, and as a second property we use searchTerm
 export async function fetchEvents({ signal, searchTerm }) {
   // log to see the object passed by TanStack Query to the queryFn
