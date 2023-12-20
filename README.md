@@ -6,13 +6,13 @@
 
 ![](readme-images/01-02.png)
 
-In this section, we're going to work on yet another new project, and whilst working on this project, you will learn how to use TanStack Query, a third-party React library, formerly known as React Query, so that's its old name, the new name is TanStack Query, and it is a library that helps you with sending HTTP requests from inside your React app. So it helps you with connecting your React frontend to a backend.
+In this section, we're going to work on yet another new project, and whilst working on this project, you will learn how to use `TanStack Query`, a third-party React library, formerly known as `TanStack Query`, so that's its old name, the new name is `TanStack Query`, and it is a library that helps you with sending HTTP requests from inside your React app. So it helps you with connecting your React frontend to a backend.
 
-Now, of course, in this course, you already learned how to do that, for example, with useEffect and using the built-in fetch function that's provided by the browser, but in this section here, you will learn what exactly TanStack Query is, and most importantly, why you would use it instead of using `useEffect` and `fetch`, for example.
+Now, of course, in this course, you already learned how to do that, for example, with useEffect and using the built-in fetch function that's provided by the browser, but in this section here, you will learn what exactly `TanStack Query` is, and most importantly, why you would use it instead of using `useEffect` and `fetch`, for example.
 
-And you will then learn how to use this TanStack Query library to fetch data and to mutate data, so how to send, get, and post, and put, and delete requests, and all these things. You will learn how to configure and efficiently use this library, and we will also explore many more advanced concepts like working with the cache that's provided by that library, how it works, and how you can invalidate and change it.
+And you will then learn how to use this `TanStack Query` library to fetch data and to mutate data, so how to send, get, and post, and put, and delete requests, and all these things. You will learn how to configure and efficiently use this library, and we will also explore many more advanced concepts like working with the cache that's provided by that library, how it works, and how you can invalidate and change it.
 
-We'll explore the topic of optimistic updating, what that is, and how you would implement it with TanStack Query, and much more.
+We'll explore the topic of optimistic updating, what that is, and how you would implement it with `TanStack Query`, and much more.
 
 ## TanStack Query: What & Why?
 
@@ -20,11 +20,11 @@ We'll explore the topic of optimistic updating, what that is, and how you would 
 
 ![](readme-images/03-02.png)
 
-Before we delve into utilizing TanStack Query in this project, it's crucial that we all have a clear understanding of what TanStack Query is and the reasons for considering its use. As highlighted in the initial video of this section, TanStack Query serves as a library designed to facilitate the management of HTTP requests and ensure synchronization between the frontend user interface and backend data.
+Before we delve into utilizing `TanStack Query` in this project, it's crucial that we all have a clear understanding of what `TanStack Query` is and the reasons for considering its use. As highlighted in the initial video of this section, `TanStack Query` serves as a library designed to facilitate the management of HTTP requests and ensure synchronization between the frontend user interface and backend data.
 
-The fundamental concept revolves around sending HTTP requests and maintaining coherence between the frontend and backend. It's essential to note that while TanStack Query streamlines this process, it is not a prerequisite. Achieving the same result is feasible using tools like the `useEffect` hook and the `fetch` function, as demonstrated earlier in this course.
+The fundamental concept revolves around sending HTTP requests and maintaining coherence between the frontend and backend. It's essential to note that while `TanStack Query` streamlines this process, it is not a prerequisite. Achieving the same result is feasible using tools like the `useEffect` hook and the `fetch` function, as demonstrated earlier in this course.
 
-TanStack Query, however, offers a significant advantage in simplifying code, potentially enhancing the developer's experience. This is particularly notable due to the library's inclusion of numerous built-in advanced features. These features prove invaluable for more intricate React applications, addressing challenges that would otherwise be laborious to tackle independently.
+`TanStack Query`, however, offers a significant advantage in simplifying code, potentially enhancing the developer's experience. This is particularly notable due to the library's inclusion of numerous built-in advanced features. These features prove invaluable for more intricate React applications, addressing challenges that would otherwise be laborious to tackle independently.
 
 In the repository, specifically within the `src/components/Events` directory, you'll encounter a component named `NewEventsSection`. In the corresponding file, the useEffect hook is employed to execute code responsible for sending an HTTP request to the backend and retrieving events data. The component manages states for data, potential errors, and loading indicators to update the UI accordingly.
 
@@ -110,13 +110,13 @@ While this approach utilizing React's built-in features is entirely valid, it do
 
 For instance, the current code lacks a mechanism for triggering a refetch when returning to the website after navigating to a different tab. Additionally, the absence of caching functionality could result in redundant data fetching when switching between pages, hindering the user experience. Implementing these features from scratch demands significant effort and precision.
 
-This is where TanStack Query becomes instrumental. The library not only streamlines existing code, such as state management, but also introduces advanced features like caching and automatic data fetching upon revisiting the website. These subtle enhancements contribute to a more efficient and user-friendly application. Now, let's embark on our journey with TanStack Query to leverage its capabilities and improve our app.
+This is where `TanStack Query` becomes instrumental. The library not only streamlines existing code, such as state management, but also introduces advanced features like caching and automatic data fetching upon revisiting the website. These subtle enhancements contribute to a more efficient and user-friendly application. Now, let's embark on our journey with `TanStack Query` to leverage its capabilities and improve our app.
 
 ## Install & Using TanStack Query - And Seeing Why It's Great!
 
-Install TanStack Query with `npm install @tanstack/react-query`
+Install `TanStack Query` with `npm install @tanstack/react-query`
 
-We will change the code in `src/components/Events/NewEventsSection.jsx` to make use of TanStack Query
+We will change the code in `src/components/Events/NewEventsSection.jsx` to make use of `TanStack Query`
 
 We move the `fetch` from inside the `useEffect` out of the Component and into a new `http.js` in a new `util` subfolder
 We remove the `setIsLoading(true);` from the `fetch`
@@ -142,8 +142,8 @@ export async function fetchEvents() {
 
 We remove the `3 states` and the `useEffect` from `src/components/Events/NewEventsSection.jsx`
 
-We can now use TanStack Query
-We import `useQuery` a custom hook built by the TanStack Query team
+We can now use `TanStack Query`
+We import `useQuery` a custom hook built by the `TanStack Query` team
 
 Now we can use the `useQuery` hook in the `src/components/Events/NewsEventsSection.jsx` Component
 
@@ -154,7 +154,7 @@ We pass an Object to `useQuery` and in this object we can set various properties
 One of which is the `queryFn` (Query Function) property
 With this Function you define the actual code that will send the actual HTTP Request
 
-TanStack Query does not come with some built in logic to send HTTP Requests
+`TanStack Query` does not come with some built in logic to send HTTP Requests
 Instead it comes with logic for managing those requests
 For keeping track of the data and the possible errors that are yielded by these requests and so on
 
@@ -164,18 +164,18 @@ All `useQuery` `queryFn` wants is a function that returns a `Promise`
 We can now import the `fetchEvents` function we moved to the `utils/http.js`
 
 And use it as our `queryFn` value
-So `fetchEvents` will be executed by TanStack Query to fetch the data
+So `fetchEvents` will be executed by `TanStack Query` to fetch the data
 
 There is another property we should add, the `queryKey` property
-When using `useQuery` every query, every fetch request, also should have a `queryKey` which will internally be used by TanStack Query to cache the data that's yielded by that request
+When using `useQuery` every query, every fetch request, also should have a `queryKey` which will internally be used by `TanStack Query` to cache the data that's yielded by that request
 So that the response from that request could be re-used in the future if you are trying to send the same request again
 
 ![](readme-images/04-01.png)
 
-You can configure how long data should be stored and reused by TanStack Query
+You can configure how long data should be stored and reused by `TanStack Query`
 This is an important mechanism because data can be shown to the user quicker if you already have it because it doesn't need to be refetched all the time
 So that's why every query needs a `queryKey` and that key is actually an array
-And array of values that are internally stored by TanStack Query such that whenever you are using a similar array of similar values TanStack Query sees that and is able to re-use existing data
+And array of values that are internally stored by `TanStack Query` such that whenever you are using a similar array of similar values `TanStack Query` sees that and is able to re-use existing data
 For now we will use `queryKey: ["events"]`
 But the `queryKey` can contain multiple values and you are not limited to just using strings, you can use objects or nested arrays etc
 
@@ -190,7 +190,7 @@ there are other properties like `refetch` function which could in theory be call
 ```jsx
 // src/components/Events/NewsEventsSection.jsx
 
-// import TanStack Query
+// import `TanStack Query`
 import { useQuery } from "@tanstack/react-query";
 
 import LoadingIndicator from "../UI/LoadingIndicator.jsx";
@@ -251,7 +251,7 @@ export default function NewEventsSection() {
 }
 ```
 
-In order to use the `useQuery` Hook you must wrap the components that want to use these features with a special provider component in TanStack Query
+In order to use the `useQuery` Hook you must wrap the components that want to use these features with a special provider component in `TanStack Query`
 We will do that in `/src/App.jsx`
 
 We import `QueryClientProvider` and `QueryClient`
@@ -260,7 +260,7 @@ We instantiate a `new QueryClient` as `queryClient`
 We wrap the `QueryClientProvider` around our Router
 And we pass the `client` prop our `queryClient` we created
 
-Now the App has the ability to use TanStack Query everywhere
+Now the App has the ability to use `TanStack Query` everywhere
 We can notice TanStack automatically refetches on window refocus
 
 ```jsx
@@ -325,6 +325,83 @@ export default App;
 
 ## Understanding & Configuring Query Behaviours - Cache & Stale Data
 
+`TanStack Query` offers certain advantages, one super important feature would be `Caching`.
+
+`TanStack Query` **caches response data**.
+
+As a result, if we're on our website, we can, for example, go to a different page by clicking "View Details."
+When we then go back by clicking "View All Events," the events here are available instantly.
+This might seem obvious, but it is not.
+Before, when we used `useEffect` and our own fetching logic, this was not the case.
+There, if we went to a different page and came back, a brand new request was sent, and all the data was fetched again.
+Now, with `TanStack Query`, the data is available instantly.
+
+Though, if you take a look at the Network Tab, you will actually see that as I click on "View All Events," there is another request being sent.
+Nonetheless, the data is available instantly.
+Of course, these requests are all pretty fast because we're working locally, but we would still see that data instantly even if the request were a bit slower.
+
+We can easily simulate this by going to the Network Tab in the Developer Tools, throttling this a little bit, and selecting "Slow 3G."
+With that enabled, you'll see that still, if I go back to "View All Events," the data is available instantly.
+Just the images were not available instantly because those, of course, still had to be re-fetched.
+These are not fetched by useQuery and not cached by `TanStack Query`.
+Instead, these are simply included through links and fetched by the browser.
+But you saw that despite these images being re-fetched, the other data was available instantly, and now even the images were cached.
+That's really important to understand.
+
+There is another request being sent behind the scenes here, but this is not the request that's needed to display data instantly.
+
+Instead, `TanStack Query` caches the response data you are getting back from your requests, and it will reuse that data whenever it encounters a new `useQuery` execution with the same `Query Key`.
+
+For example, if we go back to this page and, therefore, this component function executes again, `TanStack Query` will see that this `Query Key` has been used before and that it did already cache data for that key.
+It will then instantly yield that data but at the same time, also send this request again behind the scenes to see if updated data is available.
+It will silently replace that data with the updated data so that after a couple of seconds or however long it takes to fetch that data, we have the updated data on the screen.
+This way, we get the best of both worlds: instant results but still updated data once this behind-the-scenes request is done.
+
+As a developer using `TanStack Query`, you can control if this is the behaviour you want.
+For example, by setting a `staleTime` on your queries.
+This controls after which time `TanStack Query` will send such a behind-the-scenes request to get updated data if it found data in your cache.
+The default is zero, which means it will use data from the cache but will always also send such a behind-the-scenes request to get updated data.
+If you set this to 5,000, for example, it will wait for 5,000 milliseconds before sending another request.
+So, if this component was rendered and, therefore, this request was sent, and within five seconds this component is rendered again, and the same request would need to be sent, `TanStack Query` would not send it if the `staleTime` is set to 5,000.
+
+```jsx
+const { data, isPending, isError, error } = useQuery({
+  queryFn: fetchEvents,
+  queryKey: ["events"],
+  // wait for 5000 milliseconds before sending another request
+  staleTime: 5000,
+});
+```
+
+You can see this in your application if you go back to the page and if you reload it and then click "View Details" within five seconds, click on "View All Events," no Events Request was sent.
+If you wait for more than five seconds and go somewhere else and come back, this Events Request is being sent.
+That's the `staleTime` with which you can make sure that no unnecessary requests are sent.
+As mentioned, the default is zero, but you can set this to whatever you want.
+
+Another value you can set here is the `gcTime`, the `Garbage Collection Time`.
+This controls how long the data and the cache will be kept around.
+The default here is five minutes.
+You could, of course, also reduce this, for example, to half a minute, with 30,000 milliseconds.
+This would mean that the cached data would only be kept around for half a minute and thereafter, it would be discarded.
+So, if this component needs to render again, there would be no cached data, and therefore, `TanStack Query` would always need to send a new request to get some data before it can show anything.
+
+```jsx
+const { data, isPending, isError, error } = useQuery({
+  queryFn: fetchEvents,
+  queryKey: ["events"],
+  // how long the cache will be kept
+  gcTime: 30000,
+});
+```
+
+If we reduce `gcTime` to one second for example, as a result, if we load this page, we need to send the request and wait for the data.
+But if we then go somewhere else and come back, the data was not there, which becomes even clearer if we throttle it.
+First we reload this, then we'll throttle it, and now we'll go somewhere else and then come back.
+Now you see, there's this loading spinner because now no data was there, and we did not just send some behind-the-scenes request; instead, this request was now actually needed to show anything at all because the cache was cleared because of this setting.
+
+**We can control how long data is kept around in cache.**
+We are exploring these topics in great depth here because this is one of the main features of `TanStack Query`: **being able to control how long data is kept around and when new requests will be sent.**
+
 ## Dynamic Query Functions & Query Keys
 
 ## The Query Configuration Object & Aborting Requests
@@ -345,7 +422,7 @@ export default App;
 
 ## Enhancing the App & Repeating Mutation Concepts
 
-## React Query Advantages in Action
+## TanStack Query Advantages in Action
 
 ## Updating Data with Mutations
 
@@ -353,4 +430,4 @@ export default App;
 
 ## Using the Query Key as Query Function Input
 
-## React Query & React Router
+## TanStack Query & React Router

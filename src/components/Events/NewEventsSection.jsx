@@ -13,6 +13,10 @@ export default function NewEventsSection() {
     queryFn: fetchEvents,
     // define a Query Key
     queryKey: ["events"],
+    // Stale Time : wait for 5000 milliseconds before sending another request
+    // staleTime: 5000,
+    // Garbage Collection Time: how long the cache will be kept
+    // gcTime: 30000,
   });
 
   let content;
