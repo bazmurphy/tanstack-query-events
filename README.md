@@ -684,6 +684,106 @@ But we're now also going to take a closer look at how exactly it works and how w
 
 ## Enabled & Disabled Queries
 
+So now that we've explored the behaviour of `TanStack Query` in depth, let's come back to this "Find Your Next Event" feature and see if it actually works. If we enter a search term here and click search, that looks good. If we change this and click search, this also looks good. It seems to find results that make sense here for this search term. By the way, it searches the title, location, and description. And for example, for this event where web dev does not occur in the title or the location, it does occur in the description. So all these results are valid here. And we get this valid and expected behaviour because we're managing the `searchTerm` as state.
+
+Therefore, this `FindEventSection` component here re-executes whenever the `state` is changed. And since we're using this `state` in the `useQuery` configuration, in the `Query Key` and also as an input for the `fetchEvents` function, `TanStack Query` goes ahead and sends different HTTP requests for those different search terms.
+
+But now one thing where this component maybe does not behave exactly as expected is when I reload this page or when I visit it for the first time. Because in that case, I see all those events down there, which kind of makes sense because no search term was entered and therefore we have no criteria to narrow those events down. But, as a result, I'm seeing the same events down below as I do up above.
+
+And if we take a look at the network tab, we're sending two requests to `events`, one from every section.
+And we also can't change this with `stale time` or `garbage collection time` because we're using different `Query Keys` here.
+So the data from the Query in the first component, the `NewEventsSection` component, wouldn't be reused here anyway, as I also explained before.
+
+Nonetheless, we might want to make sure that we don't send this Query in the `FindEventsSection` component if we did not enter any search term at all.
+So we might want to disable this Query until a search term has been entered.
+And that's also a pretty common requirement that some requests should not be sent instantly.
+And it's a feature that's pretty easy to implement when using `TanStack Query` because this use Query configuration object takes an `enabled` property. If you set this to `false`, the Query is `disabled` and will not be sent, so the request will not be sent. If you set it to `true`, it will be sent, and that's `the default`.
+
+But now we want to set it to `false` if we did not enter a search term. Now to achieve this, we could set `enabled` to `search term !== ""`, which means it's `true` if the user did enter anything and `false` otherwise, but this would actually not achieve what we want to achieve here because if we're doing that and we reload, as a result, we would not be seeing any results here. We would see the loading indicator instead, but we'll fix this soon.
+
+But if we now enter, we would see results. But if we go back to no search term, we would see that loading indicator again. But maybe if we did enter something and we then go back to no search term, we want to see all events; we just don't want to see all those events initially. So there should be a difference between this input being empty initially or being empty because the user cleared it.
+
+At least that's the behaviour we'd like to have in this app. If the user did enter something else and then clears this input, we want to show all events because the user probably looked for all events, but initially, we want to show no event. And to achieve this, we'll simply make sure that my search term state initially is undefined by not passing any value at all to use state. And therefore, then here we can check that this should only be enabled if the search term is not equal to undefined. If it is undefined, which is the initial value, this Query will be `disabled`. But if the search term is anything else, including an empty string, which would be the case if the user did clear the input field manually, it will be `enabled`, and the request will be sent.
+
+And with that, we can now make sure that initially we don't have any results, but if we search something, we get that result. And if we then clear that and search, we get all events, which is exactly the behaviour we want. Now we just also want to get rid of that loading spinner, which we see initially, and we're seeing that loading spinner because when a Query is disabled, which initially here in this component will be the case, `TanStack Query` treats it as pending because we don't have any data. And instead, we're waiting for data to arrive, which can only happen once the Query is `enabled`.
+
+But that's why initially it treats it as is pending because it kind of waits for this Query to be `enabled`. Now here, that's not really the behaviour we want. We don't want a loading spinner if we're waiting for the user to enter something here. And that's why `TanStack Query` gives us an alternative to `isPending`. You can also use `isLoading` Boolean. The difference between `isLoading` and `isPending` is that `isLoading` will not be `true` if this Query is just `disabled`. So therefore, if I switch from `isPending` to `isLoading` here in this if check and we save this now, we start with this info text for the user and we can then enter "city" to briefly get that loading spinner and then our result, and we can clear that to go back to all the search results. And we therefore now have exactly the behaviour we want with the help of this Query enabling and disabling feature and this `isLoading` property.
+
+```jsx
+// src/components/Events/FindEventSection.jsx
+
+import { useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchEvents } from "../../util/http";
+import LoadingIndicator from "../UI/LoadingIndicator";
+import ErrorBlock from "../UI/ErrorBlock";
+import EventItem from "../Events/EventItem";
+
+export default function FindEventSection() {
+  const searchElement = useRef();
+
+  const [searchTerm, setSearchTerm] = useState(); // remove the initial state value ("") and instead do not define
+
+  // swap isPending with isLoading
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["events", { search: searchTerm }],
+    queryFn: ({ signal }) => fetchEvents({ signal, searchTerm }),
+    // the query will run by default (true) we can disable this behaviour by setting it to false
+    enabled: searchTerm !== undefined,
+  });
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    setSearchTerm(searchElement.current.value);
+  }
+
+  let content = <p>Please enter a search term and to find events.</p>;
+
+  // swap isPending to isLoading
+  if (isLoading) {
+    content = <LoadingIndicator />;
+  }
+
+  if (isError) {
+    content = (
+      <ErrorBlock
+        title="An error occurred"
+        message={error.info?.message || "Failed to fetch events"}
+      />
+    );
+  }
+
+  if (data) {
+    content = (
+      <ul className="events-list">
+        {data.map((event) => (
+          <li key={event.id}>
+            <EventItem event={event} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  return (
+    <section className="content-section" id="all-events-section">
+      <header>
+        <h2>Find your next event!</h2>
+        <form onSubmit={handleSubmit} id="search-form">
+          <input
+            type="search"
+            placeholder="Search events"
+            ref={searchElement}
+          />
+          <button>Search</button>
+        </form>
+      </header>
+      {content}
+    </section>
+  );
+}
+```
+
 ## Changing Data with Mutations
 
 ## Fetching More Data & Testing the Mutation

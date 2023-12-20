@@ -10,14 +10,17 @@ export default function FindEventSection() {
   const searchElement = useRef();
 
   // we create state to store the searchTerm
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(); // do not give the state an initial value
 
-  const { data, isPending, isError, error } = useQuery({
+  // swap isPending with isLoading
+  const { data, isLoading, isError, error } = useQuery({
     // we create a dynamic Query Key
     queryKey: ["events", { search: searchTerm }],
     // we use an anonymous arrow function to call fetchEvents and pass it the searchTerm
     // that anonymous arrow function recieves an object from TanStack Query and we can pass on some of its properties to the fetchEvents
     queryFn: ({ signal }) => fetchEvents({ signal, searchTerm }),
+    // the query will run by default (true) we can disable this behaviour by setting it to false
+    enabled: searchTerm !== undefined,
   });
 
   function handleSubmit(event) {
@@ -31,7 +34,8 @@ export default function FindEventSection() {
 
   // content will adjust dynamically based on the useQuery
 
-  if (isPending) {
+  // swap isPending to isLoading
+  if (isLoading) {
     content = <LoadingIndicator />;
   }
 
