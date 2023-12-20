@@ -10,7 +10,8 @@ export default function FindEventSection() {
   const searchElement = useRef();
 
   // we create state to store the searchTerm
-  const [searchTerm, setSearchTerm] = useState(); // do not give the state an initial value
+  // remove the initial state value ("") and instead do not define
+  const [searchTerm, setSearchTerm] = useState();
 
   // swap isPending with isLoading
   const { data, isLoading, isError, error } = useQuery({

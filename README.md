@@ -722,7 +722,8 @@ import EventItem from "../Events/EventItem";
 export default function FindEventSection() {
   const searchElement = useRef();
 
-  const [searchTerm, setSearchTerm] = useState(); // remove the initial state value ("") and instead do not define
+  // remove the initial state value ("") and instead do not define
+  const [searchTerm, setSearchTerm] = useState();
 
   // swap isPending with isLoading
   const { data, isLoading, isError, error } = useQuery({
@@ -785,6 +786,124 @@ export default function FindEventSection() {
 ```
 
 ## Changing Data with Mutations
+
+Okay, so at this point, we did a lot of data fetching and we learned a lot about the internals and the behavior of `TanStack Query`. But `TanStack Query` cannot just be used to get data but also to send data, to create a new event, for example.
+
+Now for that, we can click this button here to open this component, this new event component here, which opens in such a modal and we can now make sure that we collect that data entered by the user and then use `TanStack Query` to send it to the backend.
+
+So therefore, in this new event component, the question now is how can we use `useQuery` to send that data and how can we collect that data? Now collecting will actually be easy because in there we got this event form component which I prepared for you, where we simply output that form and where we then get all that data. So in this new event JSX file, we just have to make sure that this data is also sent to the backend.
+
+And for this, we should again import something from `TanStack Query` as before. And that something now is a different hook. It's not `useQuery` anymore because you only use `useQuery` to get data. To send data, to send a post request as we plan to do it here, you would instead use `useMutation`.
+
+Now just to be clear, you could also send post requests with `useQuery` because after all, you're writing the logic for sending the requests on your own anyway. But this `useMutation` hook is optimized for such data changing queries, for example, simply by making sure that those requests are not sent instantly when this component renders as it by default is the case with `useQuery`. But that instead requests are only sent when you want to send them, for example, from inside this `handleSubmit` function.
+
+So `useMutation` it is, and we should therefore call it in this new event component function. And just like `useQuery`, `useMutation` takes a `configuration object`. Now here we must set a `Mutation Function` now, just as we had to set a Query function for the `useQuery`, we can also set a `mutationKey` here. But you don't necessarily need to do this because the idea with mutations typically isn't to cache their response data because they are primarily about changing something on your backend, not about getting and storing data in your fronted.
+
+So therefore we'll just set up the `Mutation Function` and we'll add a new function to the `http.js` file for that. We create a new event function that's being exported, which will in the end send this post request to the backend that will create that event. This function wants the event data as an input and it's now function which we can use in the `NewEvent.jsx`.
+
+So here we should `import` `createNewEvent` then set it as a value for the `mutationFn`. And even though this `createNewEvent` function needs some input data, we don't have to wrap it with an anonymous function because you can pass data to that function in a different way.
+
+Because just as before with `useQuery`, `useMutation` will return an object and we can destructure this object to get access to some useful properties. Now as you see, we again got quite some properties to access, for example, also a `data` property so that we could work with the data that might be returned in the response of that request we're sending but we don't need that data here.
+
+Instead, this object also has a `mutate` **property which is extremely important because this is now a function which you can call anywhere in this component to actually send this request** because as mentioned, `useMutation`, unlike `useQuery` **does not automatically send this request when this component here is rendered but instead only when you tell it to send that request** which you do with help of that `mutate` function.
+
+And it's of course here in handleSubmit where we want to send that request. Here we can call `mutate` and then in this case, pass the form data to `mutate`. Now we actually have to change the form data a little bit to have the right format for the backend, so we'll wrap it in an `object` where we have an `event` `property` which holds my form data as a `value`. And of course, the exact shape of data you want to send here depends on the shape of data you are getting in your application and the shape of data your backend wants.
+
+We will make sure that we are sending the data exactly as required by the backend. This will send this request whenever this form is submitted and it will do so with help of `TanStack Query`. So if we now save this and go back and enter some test information and we click create, nothing happens, well it makes sense that nothing happens because we haven't written any code that would do anything after sending that request.
+
+We're not navigating away or anything like that, even though we'll soon do that. But in addition, if we open the developer tools, we can see that we got an error, that we got back an error response as it turns out. And if we open the network tab and we try sending this again, we again get an error here, a bad request error. And in our preview tab here where we see the response data we got back, we see this message invalid data provided.
+
+And if we take a look at the backend code, we can see that this is text we're sending back as a 400. So as an error response, if one of these input fields was invalid, if it was empty basically. Now of course here in our example, we did enter something into every input except for the image. We haven't yet added the functionality to let the user pick an image and that is what we'll do later on.
+
+But before we do that, we can take this as an opportunity to actually handle this error in a better way and to also show some loading spinner or loading text while the request is on its way. And that's therefore what we'll do first because back in the new event component, we can get more information out of this object returned by `useMutation`.
+
+For example, there also is a `isPending` property, which will be **`true` if the request is currently on its way and `false` otherwise**. There also is `isError` property just as you know it from `useQuery` and an `error` property which would contain error details. And we can now use that information to output different content, render different JSX code if we are waiting for a response or if we have an error.
+
+We'll start by going to that event form. And in there we first of all wanna check if we are in this `isPending` state, in which case we simply want to output the text submitting here as a little loading indicator. We only want to show these buttons on the other hand if we are not waiting for a response. So if not `!isPending` we want to show these buttons. And we also want to show an `error` message if we got an error, maybe here below the event form but still in the modal, we can check if `isError` is `true`. And if that's the case we want to output our error block, this custom component, which of course as always must be imported. And then there we can set a title of failed to create event and the message that's equal to the error object and they are diving into the potentially existing info property.
+
+And if it does exist, outputting the message or we output a hardcoded fallback message that could be "failed to create event, please check your inputs and try again". Something like that could be our error block. And with that we save and we now try to send an invalid request again, for example, by entering nothing at all, you see we get this error message here and if we throttle the network again, we can also see that loading indicator that's submitting text here and then we get this message.
+
+So that's now proper error handling and handling these different states of our `Mutation` request of our POST request.
+
+```js
+// src/util/http.js
+
+...
+export async function createNewEvent(eventData) {
+  const response = await fetch(`http://localhost:3000/events`, {
+    method: "POST",
+    body: JSON.stringify(eventData),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = new Error("An error occurred while creating the event");
+    error.code = response.status;
+    error.info = await response.json();
+    throw error;
+  }
+
+  const { event } = await response.json();
+
+  return event;
+}
+```
+
+```jsx
+// src/components/Events/NewEvent.jsx
+
+import { Link, useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query"; // import useMutation
+import Modal from "../UI/Modal.jsx";
+import EventForm from "./EventForm.jsx";
+import ErrorBlock from "../UI/ErrorBlock.jsx";
+import { createNewEvent } from "../../util/http.js";
+
+export default function NewEvent() {
+  const navigate = useNavigate();
+
+  // we do not need wrap it the mutationFn with an anonymous function to pass the formData through to createNewEvent
+  const { mutate, isPending, isError, error } = useMutation({
+    mutationFn: createNewEvent,
+  });
+
+  function handleSubmit(formData) {
+    // we can call the mutate function and pass it the formData ( { event: x } is just the shape the backend expects)
+    mutate({ event: formData });
+  }
+
+  return (
+    <Modal onClose={() => navigate("../")}>
+      <EventForm onSubmit={handleSubmit}>
+        {isPending && "Submitting..."}
+        {!isPending && (
+          <>
+            <Link to="../" className="button-text">
+              Cancel
+            </Link>
+            <button type="submit" className="button">
+              Create
+            </button>
+          </>
+        )}
+      </EventForm>
+      {isError && (
+        <ErrorBlock
+          title={"Failed to create event"}
+          message={
+            error.info?.message ||
+            "Failed to create event. Please check your inputs and try again"
+          }
+        />
+      )}
+    </Modal>
+  );
+}
+```
+
+As a next step in the next, we want to make sure that we also allow the user to pick an image.
 
 ## Fetching More Data & Testing the Mutation
 
