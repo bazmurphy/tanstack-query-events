@@ -1,5 +1,12 @@
-export async function fetchEvents() {
-  const response = await fetch("http://localhost:4000/events");
+export async function fetchEvents(searchTerm) {
+  let url = "http://localhost:4000/events";
+
+  // we add a way to dynamically append the url with the searchTerm
+  if (searchTerm) {
+    url += "?search=" + searchTerm;
+  }
+
+  const response = await fetch(url);
 
   if (!response.ok) {
     const error = new Error("An error occurred while fetching the events");

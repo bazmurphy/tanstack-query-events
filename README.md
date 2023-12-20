@@ -404,6 +404,177 @@ We are exploring these topics in great depth here because this is one of the mai
 
 ## Dynamic Query Functions & Query Keys
 
+In the `src/components/Events/FindEventSection.jsx` we have a search bar.
+The goal is to allow us to enter anything into that search bar and then find events that meet our search criteria.
+So for example events that contain the word "city" in their title or description.
+At the moment we just have some logic for potentially getting data out of that input with the help of that ref and for handling the submission of this form here.
+
+```jsx
+// src/components/Events/FindEventSection.jsx
+
+import { useRef } from "react";
+
+export default function FindEventSection() {
+  const searchElement = useRef();
+
+  function handleSubmit(event) {
+    event.preventDefault();
+  }
+
+  return (
+    <section className="content-section" id="all-events-section">
+      <header>
+        <h2>Find your next event!</h2>
+        <form onSubmit={handleSubmit} id="search-form">
+          <input
+            type="search"
+            placeholder="Search events"
+            ref={searchElement}
+          />
+          <button>Search</button>
+        </form>
+      </header>
+      <p>Please enter a search term and to find events.</p>
+    </section>
+  );
+}
+```
+
+We should again import `useQuery` to send another query with the help of `TanStack Query`.
+We again need a `queryFn` and `queryKey`.
+
+For the `queryFn` we will still use the `fetchEvents` but we need to make it more flexible, so that if there is no search term it behaves as it did, but if there is a search term to include it with the request as a query parameter. This query parameter should only be added if if the fetchEvents is triggered from inside the `FindEventSection.jsx`. `fetchEvents` needs to accept `searchTerm` as a parameter. We can construct the url dynamically and optionally adding on a `searchTerm` as a query parameter.
+
+```js
+// src/util/http.js
+
+export async function fetchEvents(searchTerm) {
+  let url = "http://localhost:4000/events";
+
+  // we add a way to dynamically append the url with the searchTerm
+  if (searchTerm) {
+    url += "?search=" + searchTerm;
+  }
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    const error = new Error("An error occurred while fetching the events");
+    error.code = response.status;
+    error.info = await response.json();
+    throw error;
+  }
+
+  const { events } = await response.json();
+
+  return events;
+}
+```
+
+In the `FindEventSection` component we can now configure the query.
+The `queryFn` is again `fetchEvents` but we now must control how it will be called to make sure that the `searchTerm` that was entered in the `input` is forwarded to `fetchEvents`.
+
+To do that we can wrap it in a function, an anonymous arrow function, and then pass the `value` that was entered into the input to `fetchEvents`. So we could say that here as a value for `fetchEvents` we wanna pass in `searchElement.current` since it's a `ref` that will be connected to this input, which will have such a `value` property. But if we're doing that, we'll have to make sure that this query is not sent before we do have a `searchTerm`.
+
+Now let's setup the `queryKey` it should be `"events"` but it should be more than just that **because this is now a query that does not have the goal of fetching all events but instead only events that match our `searchTerm`.**
+
+Now if we would use this `queryKey`, we would of course be using the same `queryKey` as in the `NewEventsSection` component. There we currently have exactly the same `queryKey`. And as a result of using the same key `TanStack Query` would actually use the result from this first query in the `NewEventsSection` component in that other query in that other component because the results are cached, they are available, and therefore they would be used here.
+
+But that of course would be wrong because that would typically be too many results because typically we're searching for something that should only yield a couple of results, not all of them.
+
+So we need a different `queryKey` here so that this query works independently from this query. And the results from this query in the `NewEventsSection` component are **not used** as results for this query in the `FindEventSection` component.
+
+Therefore we should also include some other piece of information in that `queryKey`. And that other piece of information should be `dynamic` because it should be that `searchTerm` for which we're looking. So we could, for example, pass an object here to this key where we have a search property and then our dynamic search term as a value. Alternatively, we could also just pass our `searchTerm` as a dynamic value here. This is up to you, but here we'll go for this extra object to make it very clear which kind of other value we have in this `queryKey`.
+
+And of course here we could again use this `ref` value. But using this `ref` value for `fetchEvents` and for this key is actually not ideal, because `ref`s, unlike `state` in React don't cause this component function to re-execute which means that as the value entered into the input here changes, this query is not updated and not sent again. But of course, we would wanna send it again to get new data if the user did enter a different search term.
+
+Therefore, here in this component we will also manage some state with the `useState` hook and that state will be my `searchTerm`. So here we'll have a `searchTerm` state and a `setSearchTerm` state updating function. And our goal in `handleSubmit` is now to call `setSearchTerm` and to pass the `searchElement.current.value` a value to this state updating function so that my `searchTerm` is the value entered in this input field, but only after the form was submitted.
+
+And now we can use this `searchTerm` state here and here to make sure that both `fetchEvents` as well as this `queryKey` are updated dynamically and lead to different queries being sent as this `searchTerm` changes.
+
+With that, we'll then get back an object again though. And in there, we'll, of course, get back our `data`. We of course also get back `isPending` and `isError` and the `error` if we got one. And we can now use all these pieces of information to output something down here in this component.
+
+Now to do that, we'll add a new variable here named `content`.
+
+```jsx
+// src/components/Events/FindEventSection.jsx
+
+import { useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchEvents } from "../../util/http";
+import LoadingIndicator from "../UI/LoadingIndicator";
+import ErrorBlock from "../UI/ErrorBlock";
+import EventItem from "../Events/EventItem";
+
+export default function FindEventSection() {
+  // we use ref to get the value of the search input
+  const searchElement = useRef();
+
+  // we create state to store the searchTerm
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const { data, isPending, isError, error } = useQuery({
+    // we create a dynamic Query Key
+    queryKey: ["events", { search: searchTerm }],
+    // we use an anonymous arrow function to call fetchEvents and pass it the searchTerm
+    queryFn: () => fetchEvents(searchTerm),
+  });
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    // we update the searchTerm on submit of the form
+    setSearchTerm(searchElement.current.value);
+  }
+
+  // set an initial content value
+  let content = <p>Please enter a search term and to find events.</p>;
+
+  // content will adjust dynamically based on the useQuery
+
+  if (isPending) {
+    content = <LoadingIndicator />;
+  }
+
+  if (isError) {
+    content = (
+      <ErrorBlock
+        title="An error occurred"
+        message={error.info?.message || "Failed to fetch events"}
+      />
+    );
+  }
+
+  if (data) {
+    content = (
+      <ul className="events-list">
+        {data.map((event) => (
+          <li key={event.id}>
+            <EventItem event={event} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  return (
+    <section className="content-section" id="all-events-section">
+      <header>
+        <h2>Find your next event!</h2>
+        <form onSubmit={handleSubmit} id="search-form">
+          <input
+            type="search"
+            placeholder="Search events"
+            ref={searchElement}
+          />
+          <button>Search</button>
+        </form>
+      </header>
+      {content}
+    </section>
+  );
+}
+```
+
 ## The Query Configuration Object & Aborting Requests
 
 ## Enabled & Disabled Queries
