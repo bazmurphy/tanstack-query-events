@@ -907,6 +907,116 @@ As a next step in the next, we want to make sure that we also allow the user to 
 
 ## Fetching More Data & Testing the Mutation
 
+So the goal is to let the user pick an image. And the way this app and this backend works is that this backend code in the `app.js` file in the backend folder actually has an `/events/images` route, to which a get request can be sent to get back a list of images from which the user can choose, because those actual images that will be displayed are stored on the backend in that `public` folder, they're not part of the frontend project.
+
+Therefore we can't just include them in the frontend code. Instead, a request must be sent to this backend route here so that we get that list of images that we can display and we can then render that list on the frontend. Therefore in the frontend code, in the `NewEvent` component, we must display a list of images in the `EventForm` component.
+
+In the `EventForm` component, it's actually this `ImagePicker` component that is responsible for showing the user a selection of pickable images and handling the user selecting an image. And for that `ImagePicker` needs an `array` of pickable images as an input. And at the moment this is hardcoded to always be an empty array, and that's of course not the data we want here. Instead that should be that array of images that's returned by the backend route.
+
+So in the `EventForm` component, we need to fetch that list of images from the backend. And this is a job for `TanStack Query` again, and here it's the `useQuery` hook we need because we don't want to change any data on the backend. We don't want to perform a data mutation. Therefore, instead we just want to `useQuery` for data. We want to get some data so we can and should use `useQuery` here in this `EventForm` component.
+
+And as before we must configure this hook by defining a `Query Function` and a `Query Key`. In `src/util/http.js` we create a `fetchSelectableImages` function which sends a request to that backend URL where we get that list of selectable images and it's this function that should be used as a `Query Function` in the `EventForm` component.
+
+Here we'll import this `fetchSelectableImages` function from the `http.js` file and then use it as a value for a `Query Event`, and we also need a `Query Key` here. And here the `Query Key` can again be something hard coded, like `["events-images"]`. We don't need any dynamic element in here because the request we want to send here will always be the same. It does not depend on any user input or anything like that.
+
+We can then use that object returned by `useQuery` to get hold of the `data` which will be that list of images and also `isPending` and maybe also `isError` to show some alternative information on the screen if fetching that list of images failed.
+
+But we'll start by using that `data`, so that list of images, as a value for the `images` prop on the `ImagePicker` component so that we're passing this list of images to this component. But we also want to make sure that we only show this if we get images to display. So I'll show it conditionally only if we have data.
+
+Otherwise we want to show some loading text if `isPending` is `true`, so that we show a paragraph here, for example, where we say "Loading selectable images" and if we got an `error` if `isError` is `true`, we could use this `ErrorBlock` again, this custom component which again must be imported where we then say "Failed to load selectable images," and then maybe a message of "Please try again later," or something like that, so that we're using the different pieces of information we're getting back from `useQuery` in our JSX code in this `EventForm` component.
+
+And now with that if we save, we can already see the images are here. If we reload they are here again because they were fetched by `useQuery` now as you can also see in the network tab if I reload this is the request that fetches this list of images and therefore now here we can create a new event and select an image.
+
+If we now click Create nothing happens again, but this is now the case because it did work. If we open the dev tools we now have no error here and we don't get any error message below here. Instead, the reason for nothing happening here just is that we haven't added any code to do something **if that mutation succeeds** and that's what we'll do next.
+
+```js
+// backend/app.js
+
+app.get("/events/images", async (req, res) => {
+  const imagesFileContent = await fs.readFile("./data/images.json");
+  const images = JSON.parse(imagesFileContent);
+
+  res.json({ images });
+});
+```
+
+```js
+// src/utils/http.js
+...
+export async function fetchSelectableImages({ signal }) {
+  const response = await fetch(`http://localhost:4000/events/images`, {
+    signal,
+  });
+
+  if (!response.ok) {
+    const error = new Error("An error occurred while fetching the images");
+    error.code = response.status;
+    error.info = await response.json();
+    throw error;
+  }
+
+  const { images } = await response.json();
+
+  return images;
+}
+```
+
+```jsx
+// src/components/events/EventForm.jsx
+
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import ImagePicker from "../ImagePicker.jsx";
+import ErrorBlock from "../UI/ErrorBlock.jsx";
+// import the fetch function
+import { fetchSelectableImages } from "../../util/http.js";
+
+export default function EventForm({ inputData, onSubmit, children }) {
+  const [selectedImage, setSelectedImage] = useState(inputData?.image);
+
+  // create a useQuery
+  const { data, isPending, isError } = useQuery({
+    queryKey: ["events-images"],
+    queryFn: fetchSelectableImages,
+  });
+
+  function handleSelectImage(image) {
+    setSelectedImage(image);
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData);
+
+    onSubmit({ ...data, image: selectedImage });
+  }
+
+  return (
+    ...
+      {/* here we are using the different values from useQuery */}
+      {isPending && <p>Loading selectable images...</p>}
+      {isError && (
+        <ErrorBlock
+          title="Failed to load selectable images"
+          message="Please try again"
+        />
+      )}
+      {data && (
+        <div className="control">
+          <ImagePicker
+            images={data} // we pass the data (images list) to the images prop
+            onSelect={handleSelectImage}
+            selectedImage={selectedImage}
+          />
+        </div>
+      )}
+    ...
+  );
+}
+```
+
 ## Acting on Mutation Success & Invalidating Queries
 
 ## A Challenge! The Problem
