@@ -1,6 +1,6 @@
 # TanStack Query
 
-## Module Introduction
+## 1. Module Introduction
 
 ![](readme-images/01-01.png)
 
@@ -14,7 +14,7 @@ And you will then learn how to use this `TanStack Query` library to fetch data a
 
 We'll explore the topic of optimistic updating, what that is, and how you would implement it with `TanStack Query`, and much more.
 
-## TanStack Query: What & Why?
+## 3. TanStack Query: What & Why?
 
 ![](readme-images/03-01.png)
 
@@ -112,7 +112,7 @@ For instance, the current code lacks a mechanism for triggering a refetch when r
 
 This is where `TanStack Query` becomes instrumental. The library not only streamlines existing code, such as state management, but also introduces advanced features like caching and automatic data fetching upon revisiting the website. These subtle enhancements contribute to a more efficient and user-friendly application. Now, let's embark on our journey with `TanStack Query` to leverage its capabilities and improve our app.
 
-## Install & Using TanStack Query - And Seeing Why It's Great!
+## 4. Install & Using TanStack Query - And Seeing Why It's Great!
 
 Install `TanStack Query` with `npm install @tanstack/react-query`
 
@@ -323,7 +323,7 @@ function App() {
 export default App;
 ```
 
-## Understanding & Configuring Query Behaviours - Cache & Stale Data
+## 5. Understanding & Configuring Query Behaviours - Cache & Stale Data
 
 `TanStack Query` offers certain advantages, one super important feature would be `Caching`.
 
@@ -402,7 +402,7 @@ Now you see, there's this loading spinner because now no data was there, and we 
 **We can control how long data is kept around in cache.**
 We are exploring these topics in great depth here because this is one of the main features of `TanStack Query`: **being able to control how long data is kept around and when new requests will be sent.**
 
-## Dynamic Query Functions & Query Keys
+## 6. Dynamic Query Functions & Query Keys
 
 In the `src/components/Events/FindEventSection.jsx` we have a search bar.
 The goal is to allow us to enter anything into that search bar and then find events that meet our search criteria.
@@ -581,7 +581,7 @@ So, this section, which also uses `useQuery`, the `NewEventsSection`, ultimately
 
 We'll investigate where this problem is coming from and how we can solve it next.
 
-## The Query Configuration Object & Aborting Requests
+## 7. The Query Configuration Object & Aborting Requests
 
 So why is `searchTerm` set to some strange `[object Object]` value, as we can see in this one request here, when the new events section component tries to fetch events with this `useQuery` usage?
 
@@ -682,7 +682,7 @@ export default function NewEventsSection() {
 
 But we're now also going to take a closer look at how exactly it works and how we might want to change that behaviour.
 
-## Enabled & Disabled Queries
+## 8. Enabled & Disabled Queries
 
 So now that we've explored the behaviour of `TanStack Query` in depth, let's come back to this "Find Your Next Event" feature and see if it actually works. If we enter a search term here and click search, that looks good. If we change this and click search, this also looks good. It seems to find results that make sense here for this search term. By the way, it searches the title, location, and description. And for example, for this event where web dev does not occur in the title or the location, it does occur in the description. So all these results are valid here. And we get this valid and expected behaviour because we're managing the `searchTerm` as state.
 
@@ -785,7 +785,7 @@ export default function FindEventSection() {
 }
 ```
 
-## Changing Data with Mutations
+## 9. Changing Data with Mutations
 
 Okay, so at this point, we did a lot of data fetching and we learned a lot about the internals and the behavior of `TanStack Query`. But `TanStack Query` cannot just be used to get data but also to send data, to create a new event, for example.
 
@@ -905,7 +905,7 @@ export default function NewEvent() {
 
 As a next step in the next, we want to make sure that we also allow the user to pick an image.
 
-## Fetching More Data & Testing the Mutation
+## 10. Fetching More Data & Testing the Mutation
 
 So the goal is to let the user pick an image. And the way this app and this backend works is that this backend code in the `app.js` file in the backend folder actually has an `/events/images` route, to which a get request can be sent to get back a list of images from which the user can choose, because those actual images that will be displayed are stored on the backend in that `public` folder, they're not part of the frontend project.
 
@@ -1017,7 +1017,7 @@ export default function EventForm({ inputData, onSubmit, children }) {
 }
 ```
 
-## Acting on Mutation Success & Invalidating Queries
+## 11. Acting on Mutation Success & Invalidating Queries
 
 So at the moment, whenever we create a new event, nothing happens because we don't have any code that would define what should happen after we mutate.
 
@@ -1112,12 +1112,12 @@ export default function NewEvent() {
 
 ```
 
-## A Challenge! The Problem
+## 12. A Challenge! The Problem
 
 Implement `useQuery` to get an individual Event details
 Implement `useMutation` to delete an individual Event, invalidate the stale data, and return to `/events`
 
-## A Challenge! The Solution
+## 13. A Challenge! The Solution
 
 ```js
 // backend/app.js
@@ -1244,16 +1244,16 @@ export default function EventDetails() {
 }
 ```
 
-## Disabling Automatic Refetching After Invalidations
+## 14. Disabling Automatic Refetching After Invalidations
 
-## Enhancing the App & Repeating Mutation Concepts
+## 15. Enhancing the App & Repeating Mutation Concepts
 
-## TanStack Query Advantages in Action
+## 16. TanStack Query Advantages in Action
 
-## Updating Data with Mutations
+## 17. Updating Data with Mutations
 
-## Optimistic Updating
+## 18. Optimistic Updating
 
-## Using the Query Key as Query Function Input
+## 19. Using the Query Key as Query Function Input
 
-## TanStack Query & React Router
+## 20. TanStack Query & React Router
